@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prime Checker</title>
+    <style>
+        body { font-family: Arial; max-width: 500px; margin: 50px auto; padding: 20px; }
+        input { padding: 10px; font-size: 16px; width: 200px; }
+        button { padding: 10px 20px; font-size: 16px; }
+        #result { margin-top: 20px; font-size: 18px; font-weight: bold; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Prime Number Checker</h1>
+    <input type="text" id="numberInput" placeholder="Enter a positive integer">
+    <button onclick="checkPrime()">Check</button>
+    <div id="result"></div>
+
+    <script>
+        function checkPrime() {
+            const input = document.getElementById('numberInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            const num = parseInt(input);
+            if (isNaN(num) || num <= 0 || input.trim() !== num.toString()) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = 'Please enter a positive integer';
+                return;
+            }
+            
+            fetch(`/api/check/${num}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultDiv.className = 'success';
+                    if (data.is_prime) {
+                        resultDiv.textContent = `${num} is PRIME`;
+                    } else {
+                        resultDiv.textContent = `${num} is NOT prime`;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.className = 'error';
+                    resultDiv.textContent = 'Error connecting to API';
+                });
+        }
+        
+        document.getElementById('numberInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkPrime();
+        });
+    </script>
+</body>
+</html>
