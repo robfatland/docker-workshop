@@ -41,7 +41,7 @@ This part is standalone.
 Suggestion: Don't copy-paste if possible; the idea here is to start using the `docker` command line interface (CLI). 
 
 
-```
+```bash
 cd ~ 
 mkdir fu 
 echo FROM python:3.11-slim > ~/fu/Dockerfile
@@ -64,15 +64,18 @@ docker images
 In summary we created a rather unremarkable Container that consisted of a Debian bash shell and a lightweight
 version of Python 3.11. We did this by means of a Dockerfile, then an Image called `fu-image`, then a 
 Container that Docker gave some silly name to. We checked in on our work and deleted everything at the
-end except for Dockerfile. 
+end except for Dockerfile. Docker likes to see the Container deleted before the Image it was built from
+so `container prune` preceded `rmi fu-image`.
+
 
 ### 3.2 A second command sequence
+
 
 The next logical step in learning Docker is to work an example of *changing* a Container and seeing
 that the changes persist. 
 
 
-```
+```bash
 cd ~/fu
 docker build -t fu-image .
 docker images
@@ -82,7 +85,7 @@ docker run -it fu-image bash
 This should get you on the `bash` command line inside the Container. From there issue:
 
 
-```
+```bash
 pwd
 ls
 echo curious > thiswasnotherebefore
@@ -94,7 +97,7 @@ We will re-start it now. Please note that you will get your Container Name from 
 command. Use this on the subsequent command in place of `crazy_bullwinkle`. 
 
 
-```
+```bash
 docker ps -a
 docker start -ai crazy_bullwinkle
 ```
@@ -103,7 +106,7 @@ docker start -ai crazy_bullwinkle
 Once again we are on the command line inside the Container. Now check:
 
 
-```
+```bash
 pwd
 ls
 cat thiswasnotherebefore
@@ -114,9 +117,9 @@ exit
 Finally back on the host terminal: Tidy up.
 
 
-```
-docker rmi fu-image
+```bash
 docker container prune
+docker rmi fu-image
 ```
 
 
