@@ -7,7 +7,11 @@
 
 ## Part 1 Hello World
 
-\$ docker run hello-world
+
+```bash
+docker run hello-world
+```
+
 
 Unless you have run this before: The Docker Engine on your computer will look for an Image called 'hello-world' 
 in its managed Image space and -- finding none -- will fetch the hello-world Image from Docker Hub. It will
