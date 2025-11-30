@@ -215,6 +215,12 @@ returns the prime / not-prime evaluation; which is then passed along to the brow
 ## Part 7 Running ResNet in a Container
 
 
+```bash
+cd ~/docker-workshop/resnet-classifier
+docker build -t resnet-classifier .
+docker run -d --name resnet -p 8081:8080 resnet-classifier
+```
+
 ## Part 8 Summary & Conclusion
 
 
