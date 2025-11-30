@@ -4,42 +4,179 @@
 - Docker Desktop installed and running
 - Internet connection
 
-## Setup Instructions
 
-### Step 1: Create Docker Network
+## Part 1 Hello World
+
+\$ docker run hello-world
+
+Unless you have run this before: The Docker Engine on your computer will look for an Image called 'hello-world' 
+in its managed Image space and -- finding none -- will fetch the hello-world Image from Docker Hub. It will
+save this Image locally and then create a Container from it. The Container is also saved locally. And finally
+this Container will run, providing a few lines of text. So that's a first look at the Docker workflow.
+
+
+## Part 2 Local copy of this repository
+
+
+In case you plan to follow along, this command will set you up with the necessary files
+in a folder called `docker-workshop`.
+
+
+`cd ~; git clone https://github.com/robfatland/docker-workshop.git`
+
+
+## Part 3 Dockerfile
+
+This section does not touch the `docker-workshop` folder you may have cloned in the previous step. 
+This part is standalone. 
+
+
+### 3.1 A first command sequence 
+
+
+Suggestion: Don't copy-paste if possible; the idea here is to start using the `docker` command line interface (CLI). 
+
+
+```
+cd ~ 
+mkdir fu 
+echo FROM python:3.11-slim > ~/fu/Dockerfile
+cd ~/fu
+ls
+echo Note the period at the end of the next command!
+docker build -t fu-image .
+docker images
+docker ps -a
+docker run -it fu-image bash
+echo From within this Container try some Linux commands, maybe run Python… then type exit to leave
+docker ps -a
+docker container prune
+docker ps -a
+docker images
+docker rmi fu-image
+docker images
+```
+
+In summary we created a rather unremarkable Container that consisted of a Debian bash shell and a lightweight
+version of Python 3.11. We did this by means of a Dockerfile, then an Image called `fu-image`, then a 
+Container that Docker gave some silly name to. We checked in on our work and deleted everything at the
+end except for Dockerfile. 
+
+### 3.2 A second command sequence
+
+The next logical step in learning Docker is to work an example of *changing* a Container and seeing
+that the changes persist. 
+
+
+```
+cd ~/fu
+docker build -t fu-image .
+docker images
+docker run -it fu-image bash
+```
+
+This should get you on the `bash` command line inside the Container. From there issue:
+
+
+```
+pwd
+ls
+echo curious > thiswasnotherebefore
+exit
+```
+
+Now the Container has halted but it is still stored within the Docker VM on your host machine. 
+We will re-start it now. Please note that you will get your Container Name from the `ps -a` 
+command. Use this on the subsequent command in place of `crazy_bullwinkle`. 
+
+
+```
+docker ps -a
+docker start -ai crazy_bullwinkle
+```
+
+
+Once again we are on the command line inside the Container. Now check:
+
+
+```
+pwd
+ls
+cat thiswasnotherebefore
+exit
+```
+
+
+Finally back on the host terminal: Tidy up.
+
+
+```
+docker rmi fu-image
+docker container prune
+```
+
+
+## Part 4 Bind Mount
+
+
+For this segment you will need a Linux path to a temporary data directory on your host machine. 
+I will refer to such a location as `/home/rob/tmpdata`; so please substitute your location.
+
+
+The goal here is to create a data space in the Container that is identical to a data space on your host. 
+In this way -- while the Container runs in an isolated space -- it can produce results that we can 
+access in our normal host space. 
+
+```
+-v local:docker
+```
+
+## Part 5 Summary and Context So Far
+
+
+## Part 6 Running a cooperative Two Container application
+
 ```bash
 docker network create prime-net
-```
-
-### Step 2: Pull and Run Backend (Prime Checker API)
-```bash
 docker run -d --name prime-api --network prime-net robfatland/prime-checker:latest
-```
-
-### Step 3: Pull and Run Frontend (Web Interface)
-```bash
 docker run -d --name prime-web --network prime-net -p 8080:8080 robfatland/prime-frontend:latest
-```
-
-### Step 4: Verify Containers are Running
-```bash
 docker ps
 ```
 
-You should see both `prime-api` and `prime-web` containers running.
+In a browser address bar type `http://localhost:8080` and see if the application works. 
 
-### Step 5: Access the Application
-Open your browser and go to:
+
+A moment of debugging Zen:
+
+
+```bash
+docker logs prime-api
+docker logs prime-web
 ```
-http://localhost:8080
+
+
+To clean up afterwards: 
+
+
+```bash
+docker rm -f prime-api prime-web
+docker network rm prime-net
+docker rmi NOT FINISHED YET
 ```
 
-Enter a positive integer and check if it's prime!
+A comment on how prime-web is actually doing two things NOT FINISHED YET.
 
-## Testing
-- Try `17` → should say "17 is PRIME"
-- Try `20` → should say "20 is NOT prime"
-- Try `hello` → should say "Please enter a positive integer"
+
+## Part 7 Running ResNet in a Container
+
+
+## Part 8 Summary & Conclusion
+
+
+
+# Residual from CA 
+
+
 
 ## Cleanup (After Workshop)
 ```bash
@@ -58,8 +195,7 @@ Then access at `http://localhost:9090`
 
 **Containers not starting?**
 ```bash
-docker logs prime-api
-docker logs prime-web
+
 ```
 
 ## What's Happening Behind the Scenes?
