@@ -144,16 +144,42 @@ access in our normal host space.
 ## Part 6 Running a cooperative Two Container application
 
 ```bash
+cd ~/docker-workshop
 docker network create prime-net
-docker run -d --name prime-api --network prime-net robfatland/prime-checker:latest
-docker run -d --name prime-web --network prime-net -p 8080:8080 robfatland/prime-frontend:latest
+cd prime-checker
+docker build -t prime-checker .
+cd ..
+cd prime-frontend
+docker build -t prime-frontend .
+cd ..
+docker run -d --name prime-api --network prime-net prime-checker
+docker run -d --name prime-web --network prime-net -p 8080:8080 prime-frontend
 docker ps
 ```
 
-In a browser address bar type `http://localhost:8080` and see if the application works. 
+In a browser address bar type `http://localhost:8080` and see if the application works.
 
 
-A moment of debugging Zen:
+#### Possible problem with using port 8080
+
+
+If the web app fails the problem might be that your host computer is using port 8080 for some other
+purpose. To confirm this: On a Mac/Linux/WSL instance you can try `lsof -i :8080`. On Windows (not in WSL) 
+you can try `netstat -ano | findstr :8080`. In any case you can replace the first `8080`
+(but not the second) in the `docker ... prime-frontend` command to 9090 and try again
+as follows: 
+
+
+```bash
+docker rm -f prime-web
+docker run -d --name prime-web --network prime-net -p 9090:8080 prime-frontend
+```
+
+...and now in the address bar use `http://localhost:9090`. 
+
+
+A moment of debugging Zen: You can see what Docker has been up to by checking log files
+associated with your Images.
 
 
 ```bash
@@ -162,7 +188,7 @@ docker logs prime-web
 ```
 
 
-To clean up afterwards: 
+To clean up this web app: 
 
 
 ```bash
