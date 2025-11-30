@@ -165,9 +165,7 @@ In a browser address bar type `http://localhost:8080` and see if the application
 
 If the web app fails the problem might be that your host computer is using port 8080 for some other
 purpose. To confirm this: On a Mac/Linux/WSL instance you can try `lsof -i :8080`. On Windows (not in WSL) 
-you can try `netstat -ano | findstr :8080`. In any case you can replace the first `8080`
-(but not the second) in the `docker ... prime-frontend` command to 9090 and try again
-as follows: 
+you can try `netstat -ano | findstr :8080`. In any case you can try again as follows: 
 
 
 ```bash
@@ -179,7 +177,7 @@ docker run -d --name prime-web --network prime-net -p 9090:8080 prime-frontend
 
 
 A moment of debugging Zen: You can see what Docker has been up to by checking log files
-associated with your Images.
+associated with your Containers.
 
 
 ```bash
@@ -188,16 +186,30 @@ docker logs prime-web
 ```
 
 
-To clean up this web app: 
+If a firewall is blocking `http://localhost:8080` you can try `http://127.0.0.1:8080` instead.
+
+
+#### Finishing up part 6
+
+
+Tidy up: 
 
 
 ```bash
 docker rm -f prime-api prime-web
 docker network rm prime-net
-docker rmi NOT FINISHED YET
+docker rmi prime-checker prime-frontend
 ```
 
-A comment on how prime-web is actually doing two things NOT FINISHED YET.
+
+For the record, the `prime-web` Container does two things. First it uses the `Flask` web framework to 
+hand over the `index.html` file to the browser in response to the browser connecting to `localhost:8080`. 
+This `index.html` file is the formatting template for what the browser layout.
+
+
+Second, `prime-web` responds to the User clicking the **Check** button by acting as a proxy server
+with respect to `prime-api`. That is: It gives the number to the second Container `prime-api` which
+returns the prime / not-prime evaluation; which is then passed along to the browser.
 
 
 ## Part 7 Running ResNet in a Container
