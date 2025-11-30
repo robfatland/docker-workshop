@@ -5,11 +5,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python -c "import torchvision.models as m; m.resnet50(pretrained=True)"
+RUN python -c "from transformers import AutoModelForImageClassification; AutoModelForImageClassification.from_pretrained('microsoft/resnet-50')"
 
 COPY app.py .
-COPY imagenet_classes.txt .
 
 EXPOSE 8080
 
 CMD ["python", "app.py"]
+
