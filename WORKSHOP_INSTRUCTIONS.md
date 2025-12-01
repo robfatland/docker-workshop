@@ -156,12 +156,13 @@ cd ..
 cd prime-frontend
 docker build -t prime-frontend .
 cd ..
+docker images
 docker run -d --name prime-api --network prime-net prime-checker
 docker run -d --name prime-web --network prime-net -p 8080:8080 prime-frontend
 docker ps
 ```
 
-In a browser address bar type `http://localhost:8080` and see if the application works.
+In a browser tab address bar type <b>`http://localhost:8080`</b> and see if the application works.
 
 
 #### Possible problem with using port 8080
