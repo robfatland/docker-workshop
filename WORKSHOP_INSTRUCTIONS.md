@@ -170,7 +170,7 @@ In a browser tab address bar type <b>`http://localhost:8080`</b> and see if the 
 
 If the web app fails the problem might be that your host computer is using port 8080 for some other
 purpose. To confirm this: On a Mac/Linux/WSL instance you can try `lsof -i :8080`. On Windows (not in WSL) 
-you can try `netstat -ano | findstr :8080`. In any case you can try again as follows: 
+you can try `netstat -ano | findstr :8080`. In any case you can try a dodge: 
 
 
 ```bash
@@ -191,7 +191,7 @@ docker logs prime-web
 ```
 
 
-If a firewall is blocking `http://localhost:8080` you can try `http://127.0.0.1:8080` instead.
+If a firewall is blocking `http://localhost:8080` you can also try `http://127.0.0.1:8080`.
 
 
 #### Finishing up part 6
