@@ -126,15 +126,19 @@ docker rmi fu-image
 ## Part 4 Bind Mount
 
 
-For this segment you will need a Linux path to a temporary data directory on your host machine. 
-I will refer to such a location as `/home/rob/tmpdata`; so please substitute your location.
+For this segment we need a Linux path to a temporary data directory on the host machine (laptop). 
+I will refer to this location as `~/dwdata`.
 
 
-The goal here is to create a data space in the Container that is identical to a data space on your host. 
-In this way -- while the Container runs in an isolated space -- it can produce results that we can 
-access in our normal host space. 
+Our goal is to create a corresponding data space in the Container. The host data directory is then 
+bound to the data directory on the Container.
+
+
+In this way -- while the Container runs in an isolated space -- its results are accessible
+in our host world. 
 
 ```
+
 -v local:docker
 ```
 
