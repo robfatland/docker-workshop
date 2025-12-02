@@ -138,8 +138,31 @@ In this way -- while the Container runs in an isolated space -- its results are 
 in our host world. 
 
 ```
+ls ~/fu
+cat ~/fu/Dockerfile
+echo WORKDIR app >> ~/fu/Dockerfile
+cd fu
+docker build -t fu-image .
+mkdir ~/dwdata
+echo This is the host machine > ~/dwdata/host.txt
+cat ~/dwdata/host.txt
+docker run -it -v ~/dwdata:/data fu-image bash
+```
 
--v local:docker
+part 2
+
+
+```
+pwd
+ls
+cd /data
+ls
+cat host.txt
+echo This is from the Container > container.txt
+exit
+cd ~/dwdata
+ls
+cat container.txt
 ```
 
 ## Part 5 Summary and Context So Far
