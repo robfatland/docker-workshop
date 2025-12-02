@@ -510,4 +510,340 @@ An Image is actually a layered filesystem. If we change only the Python code and
 
 ---
 
+## Additional Concepts
+
+### Q: What does `mkdir -p` do?
+
+`-p` stands for "parents".
+
+**What it does:**
+- Creates parent directories as needed
+- Doesn't error if directory already exists
+
+```bash
+mkdir -p ~/a/b/c/d    # Creates all intermediate directories
+mkdir -p ~/dwdata     # Safe even if dwdata already exists
+```
+
+**Without `-p`:**
+```bash
+mkdir ~/a/b/c/d       # Fails if ~/a/b/c doesn't exist
+mkdir ~/dwdata        # Errors if dwdata already exists
+```
+
+**For workshops:** `mkdir -p` is safer, but plain `mkdir` is simpler and teaches students to handle errors.
+
+---
+
+### Q: What's the difference between Flask and nginx?
+
+**Flask** is a Python web application framework for building web apps.
+
+**nginx** is a production web server for serving web traffic.
+
+| Aspect | Flask | nginx |
+|--------|-------|-------|
+| **Purpose** | Build web apps | Serve web traffic |
+| **Language** | Python | C |
+| **Performance** | ~1000 req/sec | ~50,000+ req/sec |
+| **Static files** | Slow | Fast |
+| **Concurrency** | Limited | Excellent |
+| **Use case** | Development, APIs | Production serving |
+
+**In production:** nginx sits in front of Flask:
+```
+Browser → nginx:80 → Flask:5000
+```
+
+**For workshops:** Flask alone is perfect—students see the full stack in Python.
+
+---
+
+### Q: Why does prime-checker use Flask if only prime-frontend serves HTML?
+
+**Both use Flask:**
+
+- **prime-checker (backend API):** Flask exposes `/check/<number>` endpoint, returns JSON
+- **prime-frontend (proxy + web):** Flask serves HTML page AND forwards requests to prime-checker
+
+Flask is used for both HTTP servers—one serves an API, the other serves web pages and proxies requests.
+
+---
+
+### Q: Why did prime-checker have flask-cors installed?
+
+**It's not needed** in the current setup.
+
+CORS (Cross-Origin Resource Sharing) would be needed if the browser's JavaScript directly called prime-checker's API from a different origin. But since prime-frontend acts as a proxy, the browser only talks to prime-frontend (same origin). The backend call from prime-frontend to prime-checker is server-to-server, which doesn't trigger CORS restrictions.
+
+**Result:** flask-cors was removed to reduce complexity.
+
+---
+
+### Q: What does EXPOSE do in a Dockerfile?
+
+**EXPOSE is documentation only.** It tells users "this container listens on port X" but doesn't actually open or publish the port.
+
+```dockerfile
+EXPOSE 8080
+```
+
+The `-p 8080:8080` flag does the actual port mapping regardless of EXPOSE.
+
+**EXPOSE is useful for:**
+- Documentation (what ports does this app use?)
+- `docker run -P` (publish all exposed ports to random host ports)
+
+**For workshops:** You could remove all EXPOSE lines and everything would still work with `-p`.
+
+---
+
+### Q: Does EXPOSE refer to the Docker VM port or container port?
+
+**Container port.** `EXPOSE 8080` means "the application inside this container listens on port 8080."
+
+It's about the container's internal network namespace, not the Docker VM or host.
+
+---
+
+### Q: What does COPY do in a Dockerfile?
+
+**COPY** copies files from the build context (host) to the image.
+
+```dockerfile
+WORKDIR /app
+COPY app.py .
+```
+
+- **Source:** `app.py` in build context (the `.` from `docker build .`)
+- **Destination:** Current WORKDIR in the image (`.` means `/app`)
+
+**Result:** `app.py` ends up at `/app/app.py` in the image.
+
+---
+
+### Q: What's the difference between RUN and CMD in a Dockerfile?
+
+**RUN:** Executes during `docker build`. Modifies the image. Creates a new layer.
+
+**CMD:** Specifies what runs when container starts. Doesn't execute during build. Only one CMD per Dockerfile.
+
+```dockerfile
+RUN pip install flask          # Happens at build time
+CMD ["python", "app.py"]       # Happens at container start
+```
+
+**Summary:**
+- RUN = build the image
+- CMD = run the container
+
+---
+
+### Q: What does `python -c` do?
+
+**Execute the following string as Python code, then exit.**
+
+```bash
+python -c "print('hello')"
+```
+
+Runs the code without needing a .py file.
+
+**Used in ResNet Dockerfile to download model during build:**
+```dockerfile
+RUN python -c "from transformers import AutoModelForImageClassification; AutoModelForImageClassification.from_pretrained('microsoft/resnet-50')"
+```
+
+---
+
+### Q: What does the ResNet RUN command download?
+
+The ~98MB download includes:
+- Model architecture definition (small, KB range)
+- Trained weights (the bulk, ~98MB)
+- Configuration files (small)
+
+**The weights ARE the model** for inference purposes. There's no separate "model" file—the weights contain the learned parameters from training on ImageNet.
+
+---
+
+### Q: Can I invoke Linux commands from Python REPL?
+
+**Not with `!ls`** — that's IPython/Jupyter syntax, not standard Python REPL.
+
+**From Python REPL, use:**
+```python
+import os
+os.system('ls')
+```
+
+or
+
+```python
+import subprocess
+subprocess.run(['ls'])
+```
+
+The `!` shortcut only works in IPython/Jupyter notebooks.
+
+---
+
+### Q: How do I exit the Python REPL in a container?
+
+`exit()` or `quit()` or Ctrl+D will all exit the Python REPL and stop the container.
+
+---
+
+### Q: What happens if there's no CMD in the Dockerfile?
+
+**The CMD from the base image is inherited.**
+
+For example, `FROM python:3.11-slim` has `CMD ["python3"]` in its Dockerfile. So `docker run fu-image` (without specifying bash) would start a Python REPL.
+
+**If there's no CMD anywhere in the chain:** The container starts and immediately exits with nothing to do.
+
+---
+
+### Q: What's the anatomy of the docker run command?
+
+```
+docker run [options] IMAGE [COMMAND]
+```
+
+**Two expected arguments:**
+1. **Image name or identifier** (required)
+2. **Command** (optional—uses CMD from Dockerfile if omitted)
+
+**Example:**
+```bash
+docker run -it fu-image bash
+```
+
+- `-it`: Interactive terminal flags
+- `fu-image`: Image name
+- `bash`: Command to run (overrides CMD)
+
+**The command is optional**—if omitted, Docker uses the CMD from the Dockerfile.
+
+---
+
+### Q: Does `bash` run "in perpetuity" when used as the command?
+
+**Not quite.** `bash` doesn't run "in perpetuity"—it runs interactively because of the `-it` flags.
+
+**Without `-it`:** bash would start and immediately exit (no stdin to read from).
+
+**With `-it`:** bash stays alive by giving it a terminal to interact with.
+
+**When you type `exit`:** bash terminates, and the container stops.
+
+---
+
+### Q: How does `-p 8080:8080` map ports?
+
+```bash
+docker run -p 8080:8080 prime-frontend
+```
+
+**Format:** `-p HOST_PORT:CONTAINER_PORT`
+
+- **Left (8080):** Port on your host machine
+- **Right (8080):** Port inside container where Flask is listening
+
+**Traffic flow:**
+1. Browser connects to `localhost:8080` (host)
+2. Docker forwards to container port 8080
+3. Flask app inside container receives request
+4. Response flows back the same path
+
+**If different:** `-p 9090:8080` means host port 9090 maps to container port 8080.
+
+---
+
+### Q: What are the default Docker networks?
+
+**Docker creates three default networks:**
+
+1. **bridge:** Default network. Containers can communicate by IP, but not by name. Used when you don't specify `--network`.
+
+2. **host:** Container uses host's network directly. No isolation. Container ports are host ports (no `-p` mapping needed).
+
+3. **none:** No networking. Completely isolated container.
+
+**Custom networks** (like `prime-net`) provide DNS resolution—containers can reach each other by name.
+
+---
+
+### Q: Is the bridge network as fast as custom networks?
+
+**Same speed**—both are bridge networks under the hood.
+
+**To get IPs on default bridge:**
+```bash
+docker inspect prime-api | grep IPAddress
+```
+
+Then hardcode that IP: `http://172.17.0.2:5000`
+
+**Bad idea because:**
+- IPs change between runs
+- Requires manual lookup
+- Hardcoded IPs in code
+
+**Custom network with DNS** (container names as hostnames) is simpler and more robust.
+
+---
+
+### Q: When would a container use the host network?
+
+**Use cases:**
+- Network performance critical (eliminates NAT overhead)
+- Need to bind to specific host interfaces
+- Network monitoring/scanning tools
+- Legacy apps that can't handle port mapping
+
+**Command:**
+```bash
+docker run --network host my-image
+```
+
+**Code inside container:**
+```python
+app.run(host='0.0.0.0', port=8080)
+```
+
+App binds to port 8080, immediately available on host at `localhost:8080`. No `-p` flag needed.
+
+**Downside:** Port conflicts. If host already uses 8080, container fails.
+
+---
+
+### Q: What does `bash -c` mean?
+
+**`-c` means "command"** (execute the following string as a command).
+
+```bash
+bash -c "echo hello"
+```
+
+It's not "clobber"—though the name does sound incongruously violent!
+
+---
+
+### Q: What is `/app` in containers?
+
+**`/app` is a convention** for where you put application code in production containers.
+
+**In Dockerfiles:**
+```dockerfile
+WORKDIR /app
+COPY app.py .
+```
+
+`WORKDIR /app` creates the directory and sets it as the current working directory. When the container starts, you're in `/app` by default.
+
+**It's not required**—just a widely-adopted convention. You could use `/code`, `/src`, or anything else, but `/app` is the de facto standard.
+
+---
+
 *This Q&A document captures the conceptual foundation of Docker from our workshop session.*
